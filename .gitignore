@@ -1,0 +1,16 @@
+node_modules/
+dist/
+
+# Umgebungsvariablen — NIEMALS einchecken!
+.env
+.env.local
+.env*.local
+
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/
+
+# Logs
+*.log

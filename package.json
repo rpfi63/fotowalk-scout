@@ -1,0 +1,32 @@
+{
+  "name": "fotowalk-scout",
+  "version": "0.1.0",
+  "description": "AI-gestützte Fotowalk-Planungs-App",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.0",
+    "@fastify/swagger": "^9.0.0",
+    "@fastify/swagger-ui": "^5.0.0",
+    "ai": "^4.0.0",
+    "dotenv": "^16.0.0",
+    "fastify": "^5.0.0",
+    "suncalc": "^1.9.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/suncalc": "^1.9.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}
