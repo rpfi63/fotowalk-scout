@@ -1,8 +1,13 @@
+import { fileURLToPath } from 'url'
+import { join, dirname } from 'path'
 import Fastify from 'fastify'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
+import staticFiles from '@fastify/static'
 import { cfg } from './config.js'
 import { planRoutes } from './routes/plan.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const app = Fastify({ logger: true })
 
@@ -16,6 +21,11 @@ await app.register(swagger, {
 await app.register(swaggerUi, {
   routePrefix: '/docs',
   uiConfig: { docExpansion: 'full' },
+})
+
+await app.register(staticFiles, {
+  root: join(__dirname, '..', 'public'),
+  prefix: '/',
 })
 
 await app.register(planRoutes)

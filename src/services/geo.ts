@@ -80,46 +80,66 @@ interface OverpassElement {
   tags?: Record<string, string>
 }
 
-/** Führt eine einzelne Overpass-Abfrage aus und parst die Elemente */
+const OVERPASS_MIRRORS = [
+  cfg.overpassUrl,
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+]
+
+/** Führt eine einzelne Overpass-Abfrage aus — bei 429 automatisch Mirror-Fallback */
 async function queryOverpass(query: string, motivType: MotivType): Promise<Spot[]> {
-  const res = await fetchWithRetry(cfg.overpassUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `data=${encodeURIComponent(query)}`,
-    timeoutMs: 30_000,
-    retries: 1,
-  })
+  let lastError: Error | null = null
 
-  if (!res.ok) {
-    throw Object.assign(
-      new Error(`Overpass API Fehler: ${res.status}`),
-      { statusCode: 502 }
-    )
+  for (const url of OVERPASS_MIRRORS) {
+    let res: Response
+    try {
+      res = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `data=${encodeURIComponent(query)}`,
+        timeoutMs: 15_000,
+        retries: 0,
+      })
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err))
+      continue
+    }
+
+    if (res.status === 429 || res.status === 503) {
+      lastError = new Error(`${res.status} auf ${url}`)
+      continue
+    }
+
+    if (!res.ok) {
+      throw Object.assign(new Error(`Overpass API Fehler: ${res.status}`), { statusCode: 502 })
+    }
+
+    const data = await res.json() as { elements: OverpassElement[] }
+    const spots: Spot[] = []
+    let idCounter = 0
+
+    for (const el of data.elements) {
+      const elLat = el.lat ?? el.center?.lat
+      const elLon = el.lon ?? el.center?.lon
+      if (elLat == null || elLon == null) continue
+
+      const name = el.tags?.name ?? el.tags?.['name:de'] ?? 'Unbenannt'
+      spots.push({
+        id: `${el.type}-${el.id}-${idCounter++}-${motivType}`,
+        name,
+        lat: elLat,
+        lon: elLon,
+        distanceKm: 0,
+        type: MOTIV_TO_OSM[motivType],
+        motivType,
+        elevationM: el.tags?.ele ? parseFloat(el.tags.ele) : undefined,
+      })
+    }
+
+    return spots
   }
 
-  const data = await res.json() as { elements: OverpassElement[] }
-  const spots: Spot[] = []
-  let idCounter = 0
-
-  for (const el of data.elements) {
-    const elLat = el.lat ?? el.center?.lat
-    const elLon = el.lon ?? el.center?.lon
-    if (elLat == null || elLon == null) continue
-
-    const name = el.tags?.name ?? el.tags?.['name:de'] ?? 'Unbenannt'
-    spots.push({
-      id: `${el.type}-${el.id}-${idCounter++}-${motivType}`,
-      name,
-      lat: elLat,
-      lon: elLon,
-      distanceKm: 0,
-      type: MOTIV_TO_OSM[motivType],
-      motivType,
-      elevationM: el.tags?.ele ? parseFloat(el.tags.ele) : undefined,
-    })
-  }
-
-  return spots
+  throw Object.assign(lastError ?? new Error('Alle Overpass-Server nicht erreichbar'), { statusCode: 502 })
 }
 
 /** Sucht Foto-Spots via Overpass API — pro Motivtyp getrennt, damit jeder Typ vertreten ist */

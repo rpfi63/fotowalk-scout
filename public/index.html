@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fotowalk Scout</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #e8e8e8;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 2rem;
+      border-bottom: 1px solid #222;
+    }
+    header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+    header p { color: #666; font-size: 0.875rem; margin-top: 0.25rem; }
+
+    main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+    /* Form */
+    .form-card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    input, select {
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #e8e8e8;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus { border-color: #555; }
+
+    .motiv-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .motiv-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 20px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .motiv-chip input[type="checkbox"] { display: none; }
+    .motiv-chip.checked {
+      background: #1a2a1a;
+      border-color: #4a8a4a;
+      color: #7dcf7d;
+    }
+
+    button[type="submit"] {
+      margin-top: 1.25rem;
+      width: 100%;
+      background: #2a5a2a;
+      border: none;
+      border-radius: 8px;
+      color: #7dcf7d;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button[type="submit"]:hover { background: #336633; }
+    button[type="submit"]:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Status-Bar */
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: #888;
+    }
+    .status-bar.visible { display: flex; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #333;
+      border-top-color: #7dcf7d;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-box {
+      display: none;
+      background: #1a0f0f;
+      border: 1px solid #4a2020;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      color: #cf7d7d;
+      font-size: 0.875rem;
+    }
+    .error-box.visible { display: block; }
+
+    /* Summary */
+    .summary {
+      display: none;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .summary.visible { display: grid; grid-template-columns: repeat(3, 1fr); }
+
+    .summary-card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .summary-card .label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+    .summary-card .value { font-size: 1.1rem; font-weight: 600; }
+    .summary-card .sub { font-size: 0.75rem; color: #666; margin-top: 0.1rem; }
+
+    .score-pill {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .score-excellent { background: #1a2a1a; color: #7dcf7d; }
+    .score-good      { background: #1a2010; color: #a0cf60; }
+    .score-ok        { background: #2a2010; color: #cfb060; }
+    .score-bad       { background: #2a1010; color: #cf6060; }
+
+    /* Light timeline */
+    .light-row { font-size: 0.8rem; color: #888; margin-top: 0.5rem; }
+    .light-row span { color: #bbb; }
+
+    /* Spots */
+    .spots-header {
+      display: none;
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.75rem;
+    }
+    .spots-header.visible { display: block; }
+
+    .spot-card {
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      transition: border-color 0.15s;
+    }
+    .spot-card:hover { border-color: #333; }
+
+    .spot-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .spot-rank {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #222;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #666;
+      flex-shrink: 0;
+    }
+    .spot-rank.top { background: #1a2a1a; color: #7dcf7d; }
+
+    .spot-name { font-size: 1rem; font-weight: 600; }
+    .spot-meta { font-size: 0.75rem; color: #666; margin-top: 0.15rem; }
+    .spot-score-wrap { margin-left: auto; text-align: right; }
+    .spot-score { font-size: 1.25rem; font-weight: 700; }
+    .spot-score-label { font-size: 0.65rem; color: #555; }
+
+    .spot-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      color: #888;
+    }
+
+    /* Tips */
+    .tips { border-top: 1px solid #1e1e1e; padding-top: 0.75rem; }
+    .tips-toggle {
+      background: none; border: none; color: #555; font-size: 0.8rem;
+      cursor: pointer; padding: 0; display: flex; align-items: center; gap: 0.3rem;
+    }
+    .tips-toggle:hover { color: #888; }
+    .tips-body { display: none; margin-top: 0.75rem; }
+    .tips-body.open { display: block; }
+
+    .tips-description { font-size: 0.85rem; color: #bbb; margin-bottom: 0.75rem; line-height: 1.5; }
+    .tips-why { font-size: 0.8rem; color: #888; font-style: italic; margin-bottom: 0.75rem; }
+
+    .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .tips-section h4 { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+    .tips-section ul { list-style: none; }
+    .tips-section ul li { font-size: 0.8rem; color: #aaa; padding: 0.15rem 0; }
+    .tips-section ul li::before { content: "— "; color: #444; }
+
+    .tips-weather { margin-top: 0.75rem; font-size: 0.8rem; color: #888; font-style: italic; }
+
+    .osm-link { font-size: 0.75rem; color: #444; text-decoration: none; }
+    .osm-link:hover { color: #666; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📷 Fotowalk Scout</h1>
+  <p>AI-gestützte Fotowalk-Planung mit Wetter, Licht und Spot-Empfehlungen</p>
+</header>
+
+<main>
+  <div class="form-card">
+    <form id="planForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="location">Standort</label>
+          <input type="text" id="location" value="Wettswil" placeholder="z.B. Luzern, Bern, Basel" required>
+        </div>
+        <div class="form-group">
+          <label for="date">Datum</label>
+          <input type="date" id="date" required>
+        </div>
+        <div class="form-group">
+          <label for="radius">Radius (km)</label>
+          <input type="number" id="radius" value="30" min="1" max="200">
+        </div>
+        <div class="form-group full">
+          <label>Motivtypen</label>
+          <div class="motiv-grid" id="motivGrid"></div>
+        </div>
+      </div>
+      <button type="submit" id="submitBtn">Fotowalk planen</button>
+    </form>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="spinner"></div>
+    <span id="statusText">Suche Spots…</span>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="summary" id="summary">
+    <div class="summary-card" id="summaryWeather"></div>
+    <div class="summary-card" id="summaryLight"></div>
+    <div class="summary-card" id="summaryLocation"></div>
+  </div>
+
+  <div class="spots-header" id="spotsHeader"></div>
+  <div id="spotsList"></div>
+</main>
+
+<script>
+const MOTIVS = [
+  { id: 'viewpoint', label: '🏔 Aussichtspunkt' },
+  { id: 'lake',      label: '🏞 See' },
+  { id: 'waterfall', label: '💧 Wasserfall' },
+  { id: 'mountain',  label: '⛰ Gipfel' },
+  { id: 'castle',    label: '🏰 Burg/Schloss' },
+  { id: 'forest',    label: '🌲 Wald' },
+  { id: 'river',     label: '🏞 Fluss' },
+]
+
+// Datum: morgen
+const tomorrow = new Date()
+tomorrow.setDate(tomorrow.getDate() + 1)
+document.getElementById('date').value = tomorrow.toISOString().slice(0, 10)
+
+// Motiv-Chips
+const grid = document.getElementById('motivGrid')
+MOTIVS.forEach(m => {
+  const chip = document.createElement('label')
+  chip.className = 'motiv-chip checked'
+  chip.innerHTML = `<input type="checkbox" value="${m.id}" checked>${m.label}`
+  chip.querySelector('input').addEventListener('change', e => {
+    chip.classList.toggle('checked', e.target.checked)
+  })
+  grid.appendChild(chip)
+})
+
+function scoreClass(score) {
+  if (score >= 80) return 'score-excellent'
+  if (score >= 60) return 'score-good'
+  if (score >= 40) return 'score-ok'
+  return 'score-bad'
+}
+
+function show(el, show) {
+  el.classList.toggle('visible', show)
+}
+
+function setStatus(text) {
+  document.getElementById('statusText').textContent = text
+}
+
+document.getElementById('planForm').addEventListener('submit', async e => {
+  e.preventDefault()
+
+  const location   = document.getElementById('location').value.trim()
+  const date       = document.getElementById('date').value
+  const radiusKm   = parseInt(document.getElementById('radius').value)
+  const motivTypes = [...document.querySelectorAll('#motivGrid input:checked')].map(i => i.value)
+
+  if (!motivTypes.length) { alert('Bitte mindestens einen Motivtyp wählen.'); return }
+
+  // Reset
+  show(document.getElementById('statusBar'), true)
+  show(document.getElementById('errorBox'), false)
+  show(document.getElementById('summary'), false)
+  show(document.getElementById('spotsHeader'), false)
+  document.getElementById('spotsList').innerHTML = ''
+  document.getElementById('submitBtn').disabled = true
+  setStatus('Geocodiere Standort…')
+
+  try {
+    setStatus('Lade Wetter, Licht und Spots…')
+    const res = await fetch('/plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, startLocation: location, radiusKm, motivTypes }),
+    })
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }))
+      throw new Error(err.error ?? res.statusText)
+    }
+
+    setStatus('Generiere AI-Foto-Tipps…')
+    const data = await res.json()
+
+    renderSummary(data)
+    renderSpots(data)
+
+  } catch (err) {
+    const box = document.getElementById('errorBox')
+    box.textContent = '⚠ ' + err.message
+    show(box, true)
+  } finally {
+    show(document.getElementById('statusBar'), false)
+    document.getElementById('submitBtn').disabled = false
+  }
+})
+
+function renderSummary(data) {
+  const { weather, light, location, date, spots } = data
+
+  document.getElementById('summaryWeather').innerHTML = `
+    <div class="label">Wetter ${date}</div>
+    <div class="value">${weather.temperatureCelsius}°C</div>
+    <div class="sub">${weather.weatherLabel}</div>
+    <div style="margin-top:0.5rem">
+      <span class="score-pill ${scoreClass(weather.score)}">${weather.photoQualityLabel}</span>
+    </div>
+    <div class="light-row" style="margin-top:0.5rem">
+      💨 ${weather.windSpeedKmh} km/h &nbsp;·&nbsp; 👁 ${weather.visibilityKm} km &nbsp;·&nbsp; 🌫 Nebel: ${weather.fogProbability}
+    </div>
+  `
+
+  document.getElementById('summaryLight').innerHTML = `
+    <div class="label">Lichtverhältnisse</div>
+    <div class="value">🌅 ${light.sunrise} – 🌇 ${light.sunset}</div>
+    <div class="light-row" style="margin-top:0.4rem">🌄 Goldene Stunde: <span>${light.goldenHourMorning.start}–${light.goldenHourMorning.end}</span> / <span>${light.goldenHourEvening.start}–${light.goldenHourEvening.end}</span></div>
+    <div class="light-row">🌆 Blaue Stunde: <span>${light.blueHourMorning.start}–${light.blueHourMorning.end}</span> / <span>${light.blueHourEvening.start}–${light.blueHourEvening.end}</span></div>
+    <div class="light-row" style="margin-top:0.4rem">🌙 ${light.moonPhaseLabel}</div>
+  `
+
+  document.getElementById('summaryLocation').innerHTML = `
+    <div class="label">Standort</div>
+    <div class="value">${location.name}</div>
+    <div class="sub">${location.displayName.split(',').slice(0,3).join(', ')}</div>
+    <div class="light-row" style="margin-top:0.5rem">${spots.length} Spots gefunden</div>
+    <div class="light-row">${data.tipsGenerated ? '✓ AI-Tipps generiert' : '— Keine AI-Tipps (Key fehlt)'}</div>
+    <div class="light-row">⏱ ${(data.processingMs/1000).toFixed(1)}s</div>
+  `
+
+  show(document.getElementById('summary'), true)
+}
+
+function renderSpots(data) {
+  const { spots } = data
+  const header = document.getElementById('spotsHeader')
+  header.textContent = `Top ${spots.length} Spots`
+  show(header, true)
+
+  const list = document.getElementById('spotsList')
+  list.innerHTML = ''
+
+  spots.forEach((spot, i) => {
+    const card = document.createElement('div')
+    card.className = 'spot-card'
+
+    const motivLabel = MOTIVS.find(m => m.id === spot.motivType)?.label ?? spot.motivType
+    const osmUrl = `https://www.openstreetmap.org/?mlat=${spot.lat}&mlon=${spot.lon}#map=15/${spot.lat}/${spot.lon}`
+
+    const tipsHtml = spot.tips ? `
+      <div class="tips">
+        <button class="tips-toggle" onclick="toggleTips(this)">▶ AI-Foto-Tipps anzeigen</button>
+        <div class="tips-body">
+          <p class="tips-description">${spot.tips.description}</p>
+          <p class="tips-why">${spot.tips.whySuitable}</p>
+          <div class="tips-grid">
+            <div class="tips-section">
+              <h4>Brennweiten</h4>
+              <ul>${spot.tips.focalLengths.map(f => `<li>${f}</li>`).join('')}</ul>
+            </div>
+            <div class="tips-section">
+              <h4>Filter</h4>
+              <ul>${spot.tips.filters.length ? spot.tips.filters.map(f => `<li>${f}</li>`).join('') : '<li>Keine spezifischen Filter</li>'}</ul>
+            </div>
+            <div class="tips-section" style="grid-column:1/-1">
+              <h4>Kompositionsideen</h4>
+              <ul>${spot.tips.compositionIdeas.map(c => `<li>${c}</li>`).join('')}</ul>
+            </div>
+          </div>
+          <p class="tips-weather">${spot.tips.weatherHints}</p>
+        </div>
+      </div>
+    ` : ''
+
+    card.innerHTML = `
+      <div class="spot-header">
+        <div class="spot-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
+        <div>
+          <div class="spot-name">${spot.name}</div>
+          <div class="spot-meta">${motivLabel} &nbsp;·&nbsp; ${spot.distanceKm} km &nbsp;·&nbsp; <a class="osm-link" href="${osmUrl}" target="_blank">auf Karte ↗</a></div>
+        </div>
+        <div class="spot-score-wrap">
+          <div class="spot-score ${scoreClass(spot.score)}">${spot.score}</div>
+          <div class="spot-score-label">Score</div>
+        </div>
+      </div>
+      ${spot.elevationM != null ? `<div class="spot-badges"><span class="badge">⛰ ${spot.elevationM} m</span></div>` : ''}
+      ${tipsHtml}
+    `
+    list.appendChild(card)
+  })
+}
+
+function toggleTips(btn) {
+  const body = btn.nextElementSibling
+  const open = body.classList.toggle('open')
+  btn.textContent = (open ? '▼' : '▶') + ' AI-Foto-Tipps ' + (open ? 'ausblenden' : 'anzeigen')
+}
+</script>
+</body>
+</html>
