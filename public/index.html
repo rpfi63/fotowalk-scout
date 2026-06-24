@@ -729,9 +729,9 @@ function clearRoute() {
 
 function renderExtLinks(pts) {
   const googleUrl = 'https://www.google.com/maps/dir/' +
-    pts.map(p => `${p.lat},${p.lon}`).join('/')
+    pts.map(p => `${p.lat},${p.lon}`).join('/') + '/data=!4m2!4m1!3e2'
   const applePts = pts.map((p, i) => `${i === 0 ? 's' : 'd'}addr=${p.lat},${p.lon}`).join('&')
-  const appleUrl = `https://maps.apple.com/?${applePts}`
+  const appleUrl = `https://maps.apple.com/?${applePts}&dirflg=w`
 
   document.getElementById('extLinks').innerHTML = `
     <a href="${googleUrl}" target="_blank" class="route-action-btn secondary">🗺 Google Maps</a>
