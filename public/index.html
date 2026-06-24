@@ -429,7 +429,7 @@ document.getElementById('planForm').addEventListener('submit', async e => {
   setStatus('Lade Wetter, Licht und Spots…')
 
   try {
-    const res = await fetch('/plan', {
+    const res = await fetch('/api/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date, startLocation: location, radiusKm, motivTypes }),

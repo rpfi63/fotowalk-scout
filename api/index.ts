@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')
 
   // Health check
-  if (req.url === '/health' || req.url?.startsWith('/health?')) {
+  if (req.url?.includes('/health')) {
     return res.status(200).json({ status: 'ok', ts: new Date().toISOString() })
   }
 
