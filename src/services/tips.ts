@@ -80,6 +80,8 @@ export async function enrichWithTips(
     if (result.status === 'fulfilled') {
       enriched[i] = { ...enriched[i], tips: result.value }
       anySuccess = true
+    } else {
+      console.error(`Tips error spot ${i}:`, result.reason)
     }
   }
 
