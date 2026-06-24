@@ -1,13 +1,12 @@
 {
+  "outputDirectory": "public",
   "functions": {
     "api/index.ts": {
       "maxDuration": 60
     }
   },
-  "routes": [
-    { "src": "/plan", "dest": "/api/index" },
-    { "src": "/health", "dest": "/api/index" },
-    { "src": "/", "dest": "/public/index.html" },
-    { "handle": "filesystem" }
+  "rewrites": [
+    { "source": "/plan", "destination": "/api/index" },
+    { "source": "/health", "destination": "/api/index" }
   ]
 }
