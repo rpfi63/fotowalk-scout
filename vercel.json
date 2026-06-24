@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "public",
   "functions": {
     "api/handler.ts": {
       "maxDuration": 60
@@ -7,6 +8,6 @@
   "rewrites": [
     { "source": "/api/plan", "destination": "/api/handler" },
     { "source": "/api/health", "destination": "/api/handler" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
