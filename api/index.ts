@@ -11,7 +11,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Health check
   if (req.url === '/health' || req.url?.startsWith('/health?')) {
-    return res.status(200).json({ status: 'ok', ts: new Date().toISOString() })
+    return res.status(200).json({
+      status: 'ok',
+      ts: new Date().toISOString(),
+      hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
+      model: process.env.ANTHROPIC_MODEL ?? '(not set)',
+    })
   }
 
   // POST /plan
