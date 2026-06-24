@@ -61,9 +61,9 @@ export async function enrichWithTips(
   weather: WeatherScore,
   light: LightConditions,
   date: string,
-): Promise<{ spots: RankedSpot[]; tipsGenerated: boolean; tipError?: string }> {
+): Promise<{ spots: RankedSpot[]; tipsGenerated: boolean }> {
   if (!cfg.anthropicApiKey) {
-    return { spots, tipsGenerated: false, tipError: 'no-api-key' }
+    return { spots, tipsGenerated: false }
   }
 
   const topN = Math.min(spots.length, 3)
@@ -75,17 +75,13 @@ export async function enrichWithTips(
   )
 
   let anySuccess = false
-  let lastError: string | undefined
   for (let i = 0; i < topN; i++) {
     const result = results[i]
     if (result.status === 'fulfilled') {
       enriched[i] = { ...enriched[i], tips: result.value }
       anySuccess = true
-    } else {
-      console.error(`Tips error spot ${i}:`, result.reason?.message, result.reason?.cause)
-      lastError = String(result.reason?.message ?? result.reason)
     }
   }
 
-  return { spots: enriched, tipsGenerated: anySuccess, tipError: lastError }
+  return { spots: enriched, tipsGenerated: anySuccess }
 }

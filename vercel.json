@@ -6,8 +6,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/plan",        "destination": "/api/handler" },
-    { "source": "/api/health",      "destination": "/api/handler" },
-    { "source": "/api/debug-tips",  "destination": "/api/handler" }
+    { "source": "/api/plan",   "destination": "/api/handler" },
+    { "source": "/api/health", "destination": "/api/handler" }
   ]
 }
