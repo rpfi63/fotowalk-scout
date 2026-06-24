@@ -1,12 +1,12 @@
 {
   "functions": {
-    "api/index.ts": {
+    "api/handler.ts": {
       "maxDuration": 60
     }
   },
   "rewrites": [
-    { "source": "/api/plan", "destination": "/api/index" },
-    { "source": "/api/health", "destination": "/api/index" },
+    { "source": "/api/plan", "destination": "/api/handler" },
+    { "source": "/api/health", "destination": "/api/handler" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
