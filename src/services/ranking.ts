@@ -3,7 +3,7 @@ import type { Spot, WeatherScore, LightConditions, RankedSpot } from '../schemas
 /** Bonus-Punkte pro POI-Typ — Viewpoints & Wasserfälle fotografisch hochwertiger */
 const TYPE_BONUS: Record<string, number> = {
   'tourism=viewpoint':  20,
-  'natural=waterfall':  18,
+  'waterway=waterfall': 18,
   'natural=peak':       15,
   'natural=water':      12,
   'waterway=river':     10,

@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fotowalk Scout</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,14 +18,11 @@
       min-height: 100vh;
     }
 
-    header {
-      padding: 2rem;
-      border-bottom: 1px solid #222;
-    }
+    header { padding: 2rem; border-bottom: 1px solid #222; }
     header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
     header p { color: #666; font-size: 0.875rem; margin-top: 0.25rem; }
 
-    main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem; }
 
     /* Form */
     .form-card {
@@ -31,18 +32,13 @@
       padding: 1.5rem;
       margin-bottom: 2rem;
     }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
     .form-group.full { grid-column: 1 / -1; }
 
     label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
 
-    input, select {
+    input {
       background: #0f0f0f;
       border: 1px solid #2a2a2a;
       border-radius: 8px;
@@ -52,157 +48,86 @@
       outline: none;
       transition: border-color 0.15s;
     }
-    input:focus, select:focus { border-color: #555; }
+    input:focus { border-color: #555; }
 
-    .motiv-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
+    .motiv-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .motiv-chip {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: #0f0f0f;
-      border: 1px solid #2a2a2a;
-      border-radius: 20px;
-      padding: 0.35rem 0.75rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      user-select: none;
+      display: flex; align-items: center; gap: 0.4rem;
+      background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 20px;
+      padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s; user-select: none;
     }
     .motiv-chip input[type="checkbox"] { display: none; }
-    .motiv-chip.checked {
-      background: #1a2a1a;
-      border-color: #4a8a4a;
-      color: #7dcf7d;
-    }
+    .motiv-chip.checked { background: #1a2a1a; border-color: #4a8a4a; color: #7dcf7d; }
 
     button[type="submit"] {
-      margin-top: 1.25rem;
-      width: 100%;
-      background: #2a5a2a;
-      border: none;
-      border-radius: 8px;
-      color: #7dcf7d;
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: 0.75rem;
-      cursor: pointer;
-      transition: background 0.15s;
+      margin-top: 1.25rem; width: 100%;
+      background: #2a5a2a; border: none; border-radius: 8px;
+      color: #7dcf7d; font-size: 0.9rem; font-weight: 600;
+      padding: 0.75rem; cursor: pointer; transition: background 0.15s;
     }
     button[type="submit"]:hover { background: #336633; }
     button[type="submit"]:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Status-Bar */
+    /* Status */
     .status-bar {
-      display: none;
-      align-items: center;
-      gap: 0.75rem;
-      background: #161616;
-      border: 1px solid #222;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.875rem;
-      color: #888;
+      display: none; align-items: center; gap: 0.75rem;
+      background: #161616; border: 1px solid #222; border-radius: 8px;
+      padding: 0.75rem 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #888;
     }
     .status-bar.visible { display: flex; }
     .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid #333;
-      border-top-color: #7dcf7d;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
+      width: 16px; height: 16px; border: 2px solid #333;
+      border-top-color: #7dcf7d; border-radius: 50%;
+      animation: spin 0.7s linear infinite; flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Error */
     .error-box {
-      display: none;
-      background: #1a0f0f;
-      border: 1px solid #4a2020;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      color: #cf7d7d;
-      font-size: 0.875rem;
+      display: none; background: #1a0f0f; border: 1px solid #4a2020;
+      border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
+      color: #cf7d7d; font-size: 0.875rem;
     }
     .error-box.visible { display: block; }
 
     /* Summary */
-    .summary {
-      display: none;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
+    .summary { display: none; gap: 1rem; margin-bottom: 1.5rem; }
     .summary.visible { display: grid; grid-template-columns: repeat(3, 1fr); }
-
-    .summary-card {
-      background: #161616;
-      border: 1px solid #222;
-      border-radius: 10px;
-      padding: 1rem;
-    }
+    .summary-card { background: #161616; border: 1px solid #222; border-radius: 10px; padding: 1rem; }
     .summary-card .label { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
     .summary-card .value { font-size: 1.1rem; font-weight: 600; }
     .summary-card .sub { font-size: 0.75rem; color: #666; margin-top: 0.1rem; }
-
-    .score-pill {
-      display: inline-block;
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
+    .score-pill { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .score-excellent { background: #1a2a1a; color: #7dcf7d; }
     .score-good      { background: #1a2010; color: #a0cf60; }
     .score-ok        { background: #2a2010; color: #cfb060; }
     .score-bad       { background: #2a1010; color: #cf6060; }
-
-    /* Light timeline */
-    .light-row { font-size: 0.8rem; color: #888; margin-top: 0.5rem; }
+    .light-row { font-size: 0.8rem; color: #888; margin-top: 0.4rem; }
     .light-row span { color: #bbb; }
 
+    /* Overview map */
+    .map-section { display: none; margin-bottom: 1.5rem; }
+    .map-section.visible { display: block; }
+    .map-section h3 { font-size: 0.8rem; color: #666; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    #overviewMap { height: 320px; border-radius: 10px; border: 1px solid #222; }
+
     /* Spots */
-    .spots-header {
-      display: none;
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 0.75rem;
-    }
+    .spots-header { display: none; font-size: 0.8rem; color: #666; margin-bottom: 0.75rem; }
     .spots-header.visible { display: block; }
 
     .spot-card {
-      background: #161616;
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 1.25rem;
-      margin-bottom: 0.75rem;
-      transition: border-color 0.15s;
+      background: #161616; border: 1px solid #222; border-radius: 12px;
+      padding: 1.25rem; margin-bottom: 0.75rem; transition: border-color 0.15s;
     }
     .spot-card:hover { border-color: #333; }
 
-    .spot-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-    }
+    .spot-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; }
     .spot-rank {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      background: #222;
+      width: 28px; height: 28px; border-radius: 50%; background: #222;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #666;
-      flex-shrink: 0;
+      font-size: 0.75rem; font-weight: 700; color: #666; flex-shrink: 0;
     }
     .spot-rank.top { background: #1a2a1a; color: #7dcf7d; }
-
     .spot-name { font-size: 1rem; font-weight: 600; }
     .spot-meta { font-size: 0.75rem; color: #666; margin-top: 0.15rem; }
     .spot-score-wrap { margin-left: auto; text-align: right; }
@@ -211,13 +136,12 @@
 
     .spot-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
     .badge {
-      font-size: 0.7rem;
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      background: #1e1e1e;
-      border: 1px solid #2a2a2a;
-      color: #888;
+      font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px;
+      background: #1e1e1e; border: 1px solid #2a2a2a; color: #888;
     }
+
+    /* Spot mini-map */
+    .spot-map { height: 180px; border-radius: 8px; border: 1px solid #2a2a2a; margin-bottom: 0.75rem; }
 
     /* Tips */
     .tips { border-top: 1px solid #1e1e1e; padding-top: 0.75rem; }
@@ -228,20 +152,119 @@
     .tips-toggle:hover { color: #888; }
     .tips-body { display: none; margin-top: 0.75rem; }
     .tips-body.open { display: block; }
-
     .tips-description { font-size: 0.85rem; color: #bbb; margin-bottom: 0.75rem; line-height: 1.5; }
     .tips-why { font-size: 0.8rem; color: #888; font-style: italic; margin-bottom: 0.75rem; }
-
     .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
     .tips-section h4 { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
     .tips-section ul { list-style: none; }
     .tips-section ul li { font-size: 0.8rem; color: #aaa; padding: 0.15rem 0; }
     .tips-section ul li::before { content: "— "; color: #444; }
-
     .tips-weather { margin-top: 0.75rem; font-size: 0.8rem; color: #888; font-style: italic; }
 
     .osm-link { font-size: 0.75rem; color: #444; text-decoration: none; }
     .osm-link:hover { color: #666; }
+
+    /* Leaflet dark theme tweaks */
+    .leaflet-container { background: #1a1a1a; }
+    .leaflet-popup-content-wrapper { background: #1e1e1e; color: #e8e8e8; border: 1px solid #333; }
+    .leaflet-popup-tip { background: #1e1e1e; }
+
+    /* Route planner */
+    .route-section {
+      display: none; background: #161616; border: 1px solid #222;
+      border-radius: 10px; padding: 1rem; margin-top: 0.75rem;
+    }
+    .route-section.visible { display: block; }
+    .route-section h4 { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .route-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem; }
+    .route-mode-btn {
+      background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 6px;
+      color: #888; font-size: 0.8rem; padding: 0.35rem 0.75rem; cursor: pointer;
+    }
+    .route-mode-btn.active { background: #1a2a1a; border-color: #4a8a4a; color: #7dcf7d; }
+    .route-action-btn {
+      background: #2a5a2a; border: none; border-radius: 6px;
+      color: #7dcf7d; font-size: 0.8rem; font-weight: 600;
+      padding: 0.35rem 0.75rem; cursor: pointer;
+    }
+    .route-action-btn:hover { background: #336633; }
+    .route-action-btn.secondary {
+      background: #1a1a2a; border: 1px solid #3a3a6a; color: #8080cf;
+    }
+    .route-action-btn.secondary:hover { background: #222244; }
+    .route-action-btn.danger { background: #2a1a1a; border: 1px solid #6a3a3a; color: #cf8080; }
+    .route-spot-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .route-spot-chip {
+      display: flex; align-items: center; gap: 0.4rem;
+      background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 20px;
+      padding: 0.25rem 0.6rem; font-size: 0.75rem; cursor: pointer; user-select: none;
+    }
+    .route-spot-chip input { display: none; }
+    .route-spot-chip.checked { background: #1a2010; border-color: #5a8a3a; color: #a0cf60; }
+    .route-summary { font-size: 0.78rem; color: #666; margin-top: 0.5rem; }
+    .ext-links { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+
+    /* Spot card route button */
+    .spot-route-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 6px;
+      color: #555; font-size: 0.78rem; padding: 0.3rem 0.7rem;
+      cursor: pointer; margin-top: 0.5rem; user-select: none; transition: all 0.15s;
+    }
+    .spot-route-btn:hover { border-color: #4a8a4a; color: #7dcf7d; }
+    .spot-route-btn.active { background: #1a2a1a; border-color: #4a8a4a; color: #7dcf7d; }
+
+    /* Floating route bar */
+    #routeFloatBar {
+      display: none; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: #1e1e1e; border: 1px solid #4a8a4a; border-radius: 30px;
+      padding: 0.6rem 1.2rem; z-index: 8000; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      align-items: center; gap: 0.75rem; white-space: nowrap;
+    }
+    #routeFloatBar.visible { display: flex; }
+    #routeFloatBar span { font-size: 0.85rem; color: #7dcf7d; font-weight: 600; }
+    #routeFloatBar button {
+      background: #2a5a2a; border: none; border-radius: 20px;
+      color: #7dcf7d; font-size: 0.8rem; font-weight: 600;
+      padding: 0.35rem 0.9rem; cursor: pointer;
+    }
+    #routeFloatBar button:hover { background: #336633; }
+    #routeFloatBar .clear-btn {
+      background: none; border: none; color: #666; font-size: 0.85rem; cursor: pointer; padding: 0;
+    }
+    #routeFloatBar .clear-btn:hover { color: #cf7d7d; }
+
+    /* Leaflet routing panel */
+    .leaflet-routing-container { display: none; }
+
+    /* Spot-map toolbar */
+    .spot-map-wrap { position: relative; margin-bottom: 0.75rem; }
+    .spot-map-fullscreen-btn {
+      position: absolute; top: 6px; right: 6px; z-index: 1000;
+      background: #1e1e1e; border: 1px solid #444; border-radius: 6px;
+      color: #aaa; font-size: 0.75rem; padding: 0.25rem 0.5rem;
+      cursor: pointer; line-height: 1;
+    }
+    .spot-map-fullscreen-btn:hover { background: #2a2a2a; color: #fff; }
+
+    /* Fullscreen modal */
+    #mapModal {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+    }
+    #mapModal.open { display: flex; }
+    #mapModalInner {
+      position: relative; width: 90vw; height: 85vh;
+      border-radius: 12px; overflow: hidden; border: 1px solid #333;
+    }
+    #mapModalMap { width: 100%; height: 100%; }
+    #mapModalClose {
+      position: absolute; top: 10px; right: 10px; z-index: 10001;
+      background: #1e1e1e; border: 1px solid #555; border-radius: 8px;
+      color: #fff; font-size: 1rem; padding: 0.4rem 0.7rem;
+      cursor: pointer; line-height: 1;
+    }
+    #mapModalClose:hover { background: #333; }
   </style>
 </head>
 <body>
@@ -289,9 +312,40 @@
     <div class="summary-card" id="summaryLocation"></div>
   </div>
 
+  <div class="map-section" id="mapSection">
+    <h3>Alle Spots auf einen Blick</h3>
+    <div id="overviewMap"></div>
+    <div class="route-section" id="routeSection">
+      <h4>Routenplaner</h4>
+      <div class="route-controls">
+        <button class="route-mode-btn active" id="modeWalk" onclick="setMode('foot')">🚶 Zu Fuss</button>
+        <button class="route-mode-btn" id="modeCar" onclick="setMode('car')">🚗 Auto</button>
+        <button class="route-mode-btn" id="modeBike" onclick="setMode('bike')">🚴 Velo</button>
+        <button class="route-action-btn" onclick="calcRoute()">Route berechnen</button>
+        <button class="route-action-btn danger" onclick="clearRoute()">✕ Löschen</button>
+      </div>
+      <div class="route-spot-list" id="routeSpotList"></div>
+      <div class="route-summary" id="routeSummary"></div>
+      <div class="ext-links" id="extLinks"></div>
+    </div>
+  </div>
+
   <div class="spots-header" id="spotsHeader"></div>
   <div id="spotsList"></div>
 </main>
+
+<div id="routeFloatBar">
+  <span id="routeFloatCount"></span>
+  <button onclick="scrollToRouteAndCalc()">🗺 Route berechnen</button>
+  <button class="clear-btn" onclick="clearAllRouteSelections()">✕</button>
+</div>
+
+<div id="mapModal">
+  <div id="mapModalInner">
+    <button id="mapModalClose" onclick="closeMapModal()">✕</button>
+    <div id="mapModalMap"></div>
+  </div>
+</div>
 
 <script>
 const MOTIVS = [
@@ -304,17 +358,22 @@ const MOTIVS = [
   { id: 'river',     label: '🏞 Fluss' },
 ]
 
+const MOTIV_COLOR = {
+  viewpoint: '#7dcf7d', lake: '#60a0cf', waterfall: '#60cfcf',
+  mountain: '#cfcf60', castle: '#cf9060', forest: '#4a8a4a', river: '#6090cf',
+}
+
 // Datum: morgen
 const tomorrow = new Date()
 tomorrow.setDate(tomorrow.getDate() + 1)
 document.getElementById('date').value = tomorrow.toISOString().slice(0, 10)
 
-// Motiv-Chips
+// Motiv-Chips — alle deselektiert per Default
 const grid = document.getElementById('motivGrid')
 MOTIVS.forEach(m => {
   const chip = document.createElement('label')
-  chip.className = 'motiv-chip checked'
-  chip.innerHTML = `<input type="checkbox" value="${m.id}" checked>${m.label}`
+  chip.className = 'motiv-chip'
+  chip.innerHTML = `<input type="checkbox" value="${m.id}">${m.label}`
   chip.querySelector('input').addEventListener('change', e => {
     chip.classList.toggle('checked', e.target.checked)
   })
@@ -328,13 +387,20 @@ function scoreClass(score) {
   return 'score-bad'
 }
 
-function show(el, show) {
-  el.classList.toggle('visible', show)
+function show(el, visible) { el.classList.toggle('visible', visible) }
+function setStatus(text) { document.getElementById('statusText').textContent = text }
+
+function spotDisplayName(spot, index) {
+  if (spot.name && spot.name !== 'Unbenannt') return spot.name
+  const motiv = MOTIVS.find(m => m.id === spot.motivType)?.label ?? spot.motivType
+  return `${motiv} #${index + 1} (${spot.lat.toFixed(4)}, ${spot.lon.toFixed(4)})`
 }
 
-function setStatus(text) {
-  document.getElementById('statusText').textContent = text
-}
+let overviewMap = null
+const spotMaps = []
+let routeControl = null
+let routeMode = 'foot'
+let currentData = null
 
 document.getElementById('planForm').addEventListener('submit', async e => {
   e.preventDefault()
@@ -350,13 +416,19 @@ document.getElementById('planForm').addEventListener('submit', async e => {
   show(document.getElementById('statusBar'), true)
   show(document.getElementById('errorBox'), false)
   show(document.getElementById('summary'), false)
+  show(document.getElementById('mapSection'), false)
   show(document.getElementById('spotsHeader'), false)
   document.getElementById('spotsList').innerHTML = ''
   document.getElementById('submitBtn').disabled = true
-  setStatus('Geocodiere Standort…')
+
+  // Karten aufräumen
+  if (overviewMap) { overviewMap.remove(); overviewMap = null }
+  spotMaps.forEach(m => m.remove())
+  spotMaps.length = 0
+
+  setStatus('Lade Wetter, Licht und Spots…')
 
   try {
-    setStatus('Lade Wetter, Licht und Spots…')
     const res = await fetch('/plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -371,8 +443,11 @@ document.getElementById('planForm').addEventListener('submit', async e => {
     setStatus('Generiere AI-Foto-Tipps…')
     const data = await res.json()
 
+    currentData = data
     renderSummary(data)
+    renderOverviewMap(data)
     renderSpots(data)
+    renderRoutePlanner(data)
 
   } catch (err) {
     const box = document.getElementById('errorBox')
@@ -394,17 +469,18 @@ function renderSummary(data) {
     <div style="margin-top:0.5rem">
       <span class="score-pill ${scoreClass(weather.score)}">${weather.photoQualityLabel}</span>
     </div>
-    <div class="light-row" style="margin-top:0.5rem">
-      💨 ${weather.windSpeedKmh} km/h &nbsp;·&nbsp; 👁 ${weather.visibilityKm} km &nbsp;·&nbsp; 🌫 Nebel: ${weather.fogProbability}
-    </div>
+    <div class="light-row">💨 ${weather.windSpeedKmh} km/h &nbsp;·&nbsp; 👁 ${weather.visibilityKm} km</div>
+    <div class="light-row">🌫 Nebel: ${weather.fogProbability} &nbsp;·&nbsp; 🌧 ${weather.precipitationMm} mm</div>
   `
 
   document.getElementById('summaryLight').innerHTML = `
     <div class="label">Lichtverhältnisse</div>
     <div class="value">🌅 ${light.sunrise} – 🌇 ${light.sunset}</div>
-    <div class="light-row" style="margin-top:0.4rem">🌄 Goldene Stunde: <span>${light.goldenHourMorning.start}–${light.goldenHourMorning.end}</span> / <span>${light.goldenHourEvening.start}–${light.goldenHourEvening.end}</span></div>
-    <div class="light-row">🌆 Blaue Stunde: <span>${light.blueHourMorning.start}–${light.blueHourMorning.end}</span> / <span>${light.blueHourEvening.start}–${light.blueHourEvening.end}</span></div>
-    <div class="light-row" style="margin-top:0.4rem">🌙 ${light.moonPhaseLabel}</div>
+    <div class="light-row">🌄 Goldene Stunde: <span>${light.goldenHourMorning.start}–${light.goldenHourMorning.end}</span></div>
+    <div class="light-row">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>${light.goldenHourEvening.start}–${light.goldenHourEvening.end}</span></div>
+    <div class="light-row">🌆 Blaue Stunde: <span>${light.blueHourMorning.start}–${light.blueHourMorning.end}</span></div>
+    <div class="light-row"><span>${light.blueHourEvening.start}–${light.blueHourEvening.end}</span></div>
+    <div class="light-row">🌙 ${light.moonPhaseLabel}</div>
   `
 
   document.getElementById('summaryLocation').innerHTML = `
@@ -412,11 +488,55 @@ function renderSummary(data) {
     <div class="value">${location.name}</div>
     <div class="sub">${location.displayName.split(',').slice(0,3).join(', ')}</div>
     <div class="light-row" style="margin-top:0.5rem">${spots.length} Spots gefunden</div>
-    <div class="light-row">${data.tipsGenerated ? '✓ AI-Tipps generiert' : '— Keine AI-Tipps (Key fehlt)'}</div>
+    <div class="light-row">${data.tipsGenerated ? '✓ AI-Tipps generiert' : '— Keine AI-Tipps'}</div>
     <div class="light-row">⏱ ${(data.processingMs/1000).toFixed(1)}s</div>
   `
 
   show(document.getElementById('summary'), true)
+}
+
+function makeIcon(color) {
+  return L.divIcon({
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 4px #000"></div>`,
+    className: '',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -10],
+  })
+}
+
+function renderOverviewMap(data) {
+  const { spots, location } = data
+  const section = document.getElementById('mapSection')
+
+  // Sektion zuerst sichtbar machen, damit Leaflet die Grösse kennt
+  show(section, true)
+
+  const mapEl = document.getElementById('overviewMap')
+  overviewMap = L.map(mapEl, { zoomControl: true }).setView([location.lat, location.lon], 10)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 18,
+  }).addTo(overviewMap)
+
+  // Startpunkt
+  L.circleMarker([location.lat, location.lon], {
+    radius: 8, color: '#fff', fillColor: '#7dcf7d', fillOpacity: 1, weight: 2,
+  }).addTo(overviewMap).bindPopup(`<b>Start:</b> ${location.name}`)
+
+  // Spot-Marker
+  const bounds = [[location.lat, location.lon]]
+  spots.forEach((spot, i) => {
+    const name = spotDisplayName(spot, i)
+    const color = MOTIV_COLOR[spot.motivType] ?? '#888'
+    L.marker([spot.lat, spot.lon], { icon: makeIcon(color) })
+      .addTo(overviewMap)
+      .bindPopup(`<b>${i + 1}. ${name}</b><br>${MOTIVS.find(m=>m.id===spot.motivType)?.label ?? spot.motivType}<br>Score: ${spot.score} · ${spot.distanceKm} km<br><a href="#spot-${i}" onclick="document.getElementById('spot-${i}').scrollIntoView({behavior:'smooth'})" style="color:#7dcf7d;font-size:0.75rem">↓ Zum Detail</a>`)
+    bounds.push([spot.lat, spot.lon])
+  })
+
+  overviewMap.fitBounds(bounds, { padding: [30, 30] })
+  overviewMap.invalidateSize()
 }
 
 function renderSpots(data) {
@@ -431,9 +551,12 @@ function renderSpots(data) {
   spots.forEach((spot, i) => {
     const card = document.createElement('div')
     card.className = 'spot-card'
+    card.id = `spot-${i}`
 
+    const name = spotDisplayName(spot, i)
     const motivLabel = MOTIVS.find(m => m.id === spot.motivType)?.label ?? spot.motivType
     const osmUrl = `https://www.openstreetmap.org/?mlat=${spot.lat}&mlon=${spot.lon}#map=15/${spot.lat}/${spot.lon}`
+    const mapId = `spotMap-${i}`
 
     const tipsHtml = spot.tips ? `
       <div class="tips">
@@ -457,15 +580,14 @@ function renderSpots(data) {
           </div>
           <p class="tips-weather">${spot.tips.weatherHints}</p>
         </div>
-      </div>
-    ` : ''
+      </div>` : ''
 
     card.innerHTML = `
       <div class="spot-header">
         <div class="spot-rank ${i < 3 ? 'top' : ''}">${i + 1}</div>
         <div>
-          <div class="spot-name">${spot.name}</div>
-          <div class="spot-meta">${motivLabel} &nbsp;·&nbsp; ${spot.distanceKm} km &nbsp;·&nbsp; <a class="osm-link" href="${osmUrl}" target="_blank">auf Karte ↗</a></div>
+          <div class="spot-name">${name}</div>
+          <div class="spot-meta">${motivLabel} · ${spot.distanceKm} km · <a class="osm-link" href="${osmUrl}" target="_blank">OpenStreetMap ↗</a></div>
         </div>
         <div class="spot-score-wrap">
           <div class="spot-score ${scoreClass(spot.score)}">${spot.score}</div>
@@ -473,10 +595,148 @@ function renderSpots(data) {
         </div>
       </div>
       ${spot.elevationM != null ? `<div class="spot-badges"><span class="badge">⛰ ${spot.elevationM} m</span></div>` : ''}
+      <button class="spot-route-btn" id="routeBtn-${i}" onclick="toggleSpotInRoute(${i})">＋ In Route aufnehmen</button>
+      <div class="spot-map-wrap">
+        <div class="spot-map" id="${mapId}"></div>
+        <button class="spot-map-fullscreen-btn" onclick="openMapModal(${spot.lat}, ${spot.lon}, '${name.replace(/'/g,"\\'")}', '${MOTIV_COLOR[spot.motivType] ?? '#888'}')">⛶ Vollbild</button>
+      </div>
       ${tipsHtml}
     `
     list.appendChild(card)
+
+    // Mini-Karte initialisieren
+    const miniMap = L.map(mapId, { zoomControl: false, attributionControl: false })
+      .setView([spot.lat, spot.lon], 14)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(miniMap)
+    const color = MOTIV_COLOR[spot.motivType] ?? '#888'
+    L.marker([spot.lat, spot.lon], { icon: makeIcon(color) })
+      .addTo(miniMap)
+      .bindPopup(`<b>${name}</b>`)
+      .openPopup()
+    spotMaps.push(miniMap)
   })
+}
+
+function renderRoutePlanner(data) {
+  const list = document.getElementById('routeSpotList')
+  list.innerHTML = ''
+  data.spots.forEach((spot, i) => {
+    const name = spotDisplayName(spot, i)
+    const chip = document.createElement('div')
+    chip.className = 'route-spot-chip'
+    chip.id = `routeChip-${i}`
+    chip.textContent = `${i + 1}. ${name}`
+    chip.addEventListener('click', () => toggleSpotInRoute(i))
+    list.appendChild(chip)
+  })
+  document.getElementById('routeSummary').textContent = ''
+  document.getElementById('extLinks').innerHTML = ''
+  document.getElementById('routeSection').classList.add('visible')
+}
+
+function toggleSpotInRoute(i) {
+  const chip = document.getElementById(`routeChip-${i}`)
+  const btn = document.getElementById(`routeBtn-${i}`)
+  const isActive = chip?.classList.toggle('checked')
+  if (btn) {
+    btn.classList.toggle('active', isActive)
+    btn.textContent = isActive ? '✓ In Route' : '＋ In Route aufnehmen'
+  }
+  updateFloatBar()
+}
+
+function updateFloatBar() {
+  if (!currentData) return
+  const count = currentData.spots.filter((_, i) => document.getElementById(`routeChip-${i}`)?.classList.contains('checked')).length
+  const bar = document.getElementById('routeFloatBar')
+  const label = document.getElementById('routeFloatCount')
+  label.textContent = `${count} Spot${count !== 1 ? 's' : ''} gewählt`
+  bar.classList.toggle('visible', count > 0)
+}
+
+function clearAllRouteSelections() {
+  if (!currentData) return
+  currentData.spots.forEach((_, i) => {
+    document.getElementById(`routeChip-${i}`)?.classList.remove('checked')
+    const btn = document.getElementById(`routeBtn-${i}`)
+    if (btn) { btn.classList.remove('active'); btn.textContent = '＋ In Route aufnehmen' }
+  })
+  updateFloatBar()
+  clearRoute()
+}
+
+function scrollToRouteAndCalc() {
+  document.getElementById('routeSection').scrollIntoView({ behavior: 'smooth' })
+  setTimeout(calcRoute, 400)
+}
+
+function setMode(mode) {
+  routeMode = mode
+  document.getElementById('modeWalk').classList.toggle('active', mode === 'foot')
+  document.getElementById('modeCar').classList.toggle('active', mode === 'car')
+  document.getElementById('modeBike').classList.toggle('active', mode === 'bike')
+}
+
+function getSelectedWaypoints() {
+  if (!currentData) return []
+  const pts = [{ lat: currentData.location.lat, lon: currentData.location.lon, name: currentData.location.name }]
+  currentData.spots.forEach((spot, i) => {
+    if (document.getElementById(`routeChip-${i}`)?.classList.contains('checked')) {
+      pts.push({ lat: spot.lat, lon: spot.lon, name: spotDisplayName(spot, i) })
+    }
+  })
+  return pts
+}
+
+function calcRoute() {
+  const pts = getSelectedWaypoints()
+  if (pts.length < 2) { alert('Bitte mindestens einen Spot für die Route auswählen.'); return }
+  if (!overviewMap) return
+
+  if (routeControl) { overviewMap.removeControl(routeControl); routeControl = null }
+
+  const osrmProfile = routeMode === 'foot' ? 'foot' : routeMode === 'bike' ? 'bike' : 'car'
+
+  routeControl = L.Routing.control({
+    waypoints: pts.map(p => L.latLng(p.lat, p.lon)),
+    router: L.Routing.osrmv1({
+      serviceUrl: `https://router.project-osrm.org/route/v1`,
+      profile: osrmProfile,
+    }),
+    lineOptions: { styles: [{ color: '#7dcf7d', weight: 4, opacity: 0.8 }] },
+    createMarker: () => null,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    fitSelectedRoutes: true,
+    show: false,
+  }).addTo(overviewMap)
+
+  routeControl.on('routesfound', e => {
+    const r = e.routes[0].summary
+    const dist = (r.totalDistance / 1000).toFixed(1)
+    const time = Math.round(r.totalTime / 60)
+    document.getElementById('routeSummary').textContent =
+      `Route: ${dist} km · ca. ${time} Min · ${pts.length - 1} Stops`
+    renderExtLinks(pts)
+  })
+}
+
+function clearRoute() {
+  if (routeControl) { overviewMap.removeControl(routeControl); routeControl = null }
+  document.getElementById('routeSummary').textContent = ''
+  document.getElementById('extLinks').innerHTML = ''
+}
+
+function renderExtLinks(pts) {
+  const googleUrl = 'https://www.google.com/maps/dir/' +
+    pts.map(p => `${p.lat},${p.lon}`).join('/')
+  const applePts = pts.map((p, i) => `${i === 0 ? 's' : 'd'}addr=${p.lat},${p.lon}`).join('&')
+  const appleUrl = `https://maps.apple.com/?${applePts}`
+
+  document.getElementById('extLinks').innerHTML = `
+    <a href="${googleUrl}" target="_blank" class="route-action-btn secondary">🗺 Google Maps</a>
+    <a href="${appleUrl}" target="_blank" class="route-action-btn secondary">🍎 Apple Maps</a>
+  `
 }
 
 function toggleTips(btn) {
@@ -484,6 +744,34 @@ function toggleTips(btn) {
   const open = body.classList.toggle('open')
   btn.textContent = (open ? '▼' : '▶') + ' AI-Foto-Tipps ' + (open ? 'ausblenden' : 'anzeigen')
 }
+
+let modalMap = null
+function openMapModal(lat, lon, name, color) {
+  const modal = document.getElementById('mapModal')
+  modal.classList.add('open')
+
+  if (modalMap) { modalMap.remove(); modalMap = null }
+
+  modalMap = L.map('mapModalMap').setView([lat, lon], 15)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19,
+  }).addTo(modalMap)
+  L.marker([lat, lon], { icon: makeIcon(color) })
+    .addTo(modalMap)
+    .bindPopup(`<b>${name}</b>`)
+    .openPopup()
+  modalMap.invalidateSize()
+}
+
+function closeMapModal() {
+  document.getElementById('mapModal').classList.remove('open')
+  if (modalMap) { modalMap.remove(); modalMap = null }
+}
+
+document.getElementById('mapModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('mapModal')) closeMapModal()
+})
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMapModal() })
 </script>
 </body>
 </html>

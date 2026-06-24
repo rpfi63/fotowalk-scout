@@ -6,7 +6,7 @@ import type { Location, MotivType, Spot } from '../schemas.js'
 const MOTIV_TO_OSM: Record<MotivType, string> = {
   lake:      'natural=water',
   mountain:  'natural=peak',
-  waterfall: 'natural=waterfall',
+  waterfall: 'waterway=waterfall',
   castle:    'historic=castle',
   forest:    'natural=wood',
   viewpoint: 'tourism=viewpoint',
@@ -105,7 +105,7 @@ async function queryOverpass(query: string, motivType: MotivType): Promise<Spot[
       continue
     }
 
-    if (res.status === 429 || res.status === 503) {
+    if (res.status === 429 || res.status === 503 || res.status === 504) {
       lastError = new Error(`${res.status} auf ${url}`)
       continue
     }
