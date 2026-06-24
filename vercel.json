@@ -4,8 +4,10 @@
       "maxDuration": 60
     }
   },
-  "rewrites": [
-    { "source": "/plan", "destination": "/api/index" },
-    { "source": "/health", "destination": "/api/index" }
+  "routes": [
+    { "src": "/plan", "dest": "/api/index" },
+    { "src": "/health", "dest": "/api/index" },
+    { "src": "/", "dest": "/public/index.html" },
+    { "handle": "filesystem" }
   ]
 }
