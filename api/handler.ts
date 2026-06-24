@@ -23,12 +23,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const key = process.env.ANTHROPIC_API_KEY ?? ''
       const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
       const client = createAnthropic({ apiKey: key })
+      const testModel = 'claude-3-5-haiku-20241022'
       const { object } = await generateObject({
-        model: client(model),
+        model: client(testModel),
         schema: z.object({ ok: z.boolean() }),
         prompt: 'Return ok: true',
       })
-      return res.status(200).json({ keyPrefix: key.slice(0, 10), model, result: object })
+      return res.status(200).json({ keyPrefix: key.slice(0, 10), configuredModel: model, testedModel: testModel, result: object })
     } catch (e: unknown) {
       const err = e as Error & { message?: string; cause?: unknown; statusCode?: number }
       return res.status(500).json({ error: String(e), message: err.message, cause: String(err.cause ?? '') })
