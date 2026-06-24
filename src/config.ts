@@ -1,9 +1,11 @@
 import { config } from 'dotenv'
-import { resolve } from 'path'
-import { fileURLToPath } from 'url'
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
-config({ path: resolve(__dirname, '../.env.local') })
+// Lokal: .env.local laden. Auf Vercel sind env vars bereits gesetzt — dotenv überschreibt sie nicht.
+try {
+  config({ path: '.env.local' })
+} catch {
+  // ignorieren falls Datei nicht existiert
+}
 
 export const cfg = {
   port: Number(process.env.PORT ?? 3000),
