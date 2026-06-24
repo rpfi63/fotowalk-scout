@@ -23,13 +23,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const key = process.env.ANTHROPIC_API_KEY ?? ''
       const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
       const client = createAnthropic({ apiKey: key })
-      const testModel = 'claude-3-5-haiku-20241022'
-      const { object } = await generateObject({
-        model: client(testModel),
-        schema: z.object({ ok: z.boolean() }),
-        prompt: 'Return ok: true',
+      // Direkter API-Test ohne SDK
+      const rawRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'Say hi' }],
+        }),
       })
-      return res.status(200).json({ keyPrefix: key.slice(0, 10), configuredModel: model, testedModel: testModel, result: object })
+      const rawBody = await rawRes.json()
+      return res.status(200).json({ keyPrefix: key.slice(0, 10), httpStatus: rawRes.status, body: rawBody })
     } catch (e: unknown) {
       const err = e as Error & { message?: string; cause?: unknown; statusCode?: number }
       return res.status(500).json({ error: String(e), message: err.message, cause: String(err.cause ?? '') })
