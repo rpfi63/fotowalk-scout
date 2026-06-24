@@ -57,14 +57,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ])
 
     const ranked = rankSpots(rawSpots, weather, light, 10)
-    const { spots, tipsGenerated } = await enrichWithTips(ranked, weather, light, date)
+    const { spots, tipsGenerated, tipError } = await enrichWithTips(ranked, weather, light, date)
 
     const response = PlanResponseSchema.parse({
       location, date, weather, light, spots, tipsGenerated,
       processingMs: Date.now() - t0,
     })
 
-    return res.status(200).json(response)
+    return res.status(200).json({ ...response, _tipError: tipError })
   } catch (err) {
     const e = err as Error & { statusCode?: number }
     return res.status(e.statusCode ?? 500).json({ error: e.message ?? 'Interner Fehler' })
