@@ -30,7 +30,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       })
       return res.status(200).json({ keyPrefix: key.slice(0, 10), model, result: object })
     } catch (e: unknown) {
-      return res.status(500).json({ error: String(e) })
+      const err = e as Error & { message?: string; cause?: unknown; statusCode?: number }
+      return res.status(500).json({ error: String(e), message: err.message, cause: String(err.cause ?? '') })
     }
   }
 
