@@ -26,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/suncalc": "^1.9.0",
+    "@vercel/node": "^5.8.19",
     "tsx": "^4.0.0",
     "typescript": "^5.6.0",
     "vitest": "^2.0.0"

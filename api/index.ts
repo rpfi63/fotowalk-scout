@@ -1,17 +1,27 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Fastify from 'fastify'
 import serverless from 'serverless-http'
-import { cfg } from '../src/config.js'
 import { planRoutes } from '../src/routes/plan.js'
 
-const app = Fastify({ logger: false })
+// Lazy-Init: Function-Instanz wird beim ersten Request gebaut und gecacht
+let handler: ReturnType<typeof serverless> | null = null
 
-await app.register(planRoutes)
+async function getHandler() {
+  if (handler) return handler
 
-app.setErrorHandler((error, _req, reply) => {
-  const e = error as Error & { statusCode?: number }
-  reply.status(e.statusCode ?? 500).send({ error: e.message ?? 'Interner Fehler' })
-})
+  const app = Fastify({ logger: false })
+  await app.register(planRoutes)
+  app.setErrorHandler((error, _req, reply) => {
+    const e = error as Error & { statusCode?: number }
+    reply.status(e.statusCode ?? 500).send({ error: e.message ?? 'Interner Fehler' })
+  })
+  await app.ready()
 
-await app.ready()
+  handler = serverless(app as any)
+  return handler
+}
 
-export default serverless(app as any)
+export default async function (req: VercelRequest, res: VercelResponse) {
+  const h = await getHandler()
+  return h(req as any, res as any)
+}
