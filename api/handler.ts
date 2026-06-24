@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
       const client = createAnthropic({ apiKey: key })
       const { object } = await generateObject({
-        model: client('claude-haiku-4-5-20251001'),
+        model: client('claude-sonnet-4-6'),
         schema: z.object({ ok: z.boolean() }),
         prompt: 'Return ok: true',
       })
