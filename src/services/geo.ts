@@ -167,12 +167,13 @@ export async function findSpots(
       .map(s => ({ ...s, distanceKm: Math.round(haversineKm(lat, lon, s.lat, s.lon) * 10) / 10 }))
       .sort((a, b) => a.distanceKm - b.distanceKm)
 
-    // Duplikate entfernen: gleicher Name und weniger als 0.5 km auseinander
+    // Duplikate entfernen: gleicher Name = Duplikat (nur nächsten behalten)
+    // Bei "Unbenannt": Proximity-Check (< 0.5 km)
     const deduped: typeof withDist = []
     for (const spot of withDist) {
-      const isDup = deduped.some(
-        s => s.name === spot.name && s.name !== 'Unbenannt' && haversineKm(s.lat, s.lon, spot.lat, spot.lon) < 0.5
-      )
+      const isDup = spot.name === 'Unbenannt'
+        ? deduped.some(s => s.name === 'Unbenannt' && haversineKm(s.lat, s.lon, spot.lat, spot.lon) < 0.5)
+        : deduped.some(s => s.name === spot.name)
       if (!isDup) deduped.push(spot)
     }
 

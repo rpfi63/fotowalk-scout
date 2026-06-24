@@ -73,5 +73,5 @@ export function rankSpots(
   const rest = ranked.filter(s => !guaranteedIds.has(s.id))
   const combined = [...guaranteed, ...rest]
 
-  return combined.slice(0, topN)
+  return combined.slice(0, Math.min(topN, combined.length))
 }
