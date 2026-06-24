@@ -66,7 +66,7 @@ export async function enrichWithTips(
     return { spots, tipsGenerated: false }
   }
 
-  const topN = spots.length
+  const topN = Math.min(spots.length, 3)
   const enriched = [...spots]
 
   // Top-Spots parallel bereichern

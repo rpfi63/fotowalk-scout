@@ -440,7 +440,6 @@ document.getElementById('planForm').addEventListener('submit', async e => {
       throw new Error(err.error ?? res.statusText)
     }
 
-    setStatus('Generiere AI-Foto-Tipps…')
     const data = await res.json()
 
     currentData = data
@@ -488,8 +487,7 @@ function renderSummary(data) {
     <div class="value">${location.name}</div>
     <div class="sub">${location.displayName.split(',').slice(0,3).join(', ')}</div>
     <div class="light-row" style="margin-top:0.5rem">${spots.length} Spots gefunden</div>
-    <div class="light-row">${data.tipsGenerated ? '✓ AI-Tipps generiert' : '— Keine AI-Tipps'}</div>
-    <div class="light-row">⏱ ${(data.processingMs/1000).toFixed(1)}s</div>
+<div class="light-row">⏱ ${(data.processingMs/1000).toFixed(1)}s</div>
   `
 
   show(document.getElementById('summary'), true)
