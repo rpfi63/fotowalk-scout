@@ -14,6 +14,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ status: 'ok', ts: new Date().toISOString() })
   }
 
+  // Debug: AI-Verbindungstest
+  if (req.url?.includes('/debug-tips')) {
+    try {
+      const { generateObject } = await import('ai')
+      const { createAnthropic } = await import('@ai-sdk/anthropic')
+      const { z } = await import('zod')
+      const key = process.env.ANTHROPIC_API_KEY ?? ''
+      const model = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6'
+      const client = createAnthropic({ apiKey: key })
+      const { object } = await generateObject({
+        model: client(model),
+        schema: z.object({ ok: z.boolean() }),
+        prompt: 'Return ok: true',
+      })
+      return res.status(200).json({ keyPrefix: key.slice(0, 10), model, result: object })
+    } catch (e: unknown) {
+      return res.status(500).json({ error: String(e) })
+    }
+  }
+
   // POST /plan
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
